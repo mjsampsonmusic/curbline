@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Curbline</title>
+  <meta name="description" content="Parking operations console: lot occupancy, plate checks, citations and permits.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231F5AA6'/%3E%3Cpath d='M11 25V7h7a6 6 0 0 1 0 12h-7' fill='none' stroke='white' stroke-width='3.4'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=1">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">P</span>
+      <span class="brand-name">Curbline</span>
+    </div>
+    <nav class="tabs" aria-label="Sections">
+      <a href="#overview" data-tab="overview">Lots</a>
+      <a href="#enforcement" data-tab="enforcement">Enforcement</a>
+      <a href="#citations" data-tab="citations">Citations</a>
+      <a href="#permits" data-tab="permits">Permits</a>
+    </nav>
+    <p class="mode" id="mode">Loading</p>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <!-- Lots -->
+    <section class="view" id="view-overview" aria-labelledby="h-overview" hidden>
+      <div class="view-head">
+        <h1 id="h-overview">Lots right now</h1>
+        <p class="sub" id="asof"></p>
+      </div>
+      <dl class="totals" id="totals"></dl>
+      <ul class="lots" id="lots"></ul>
+    </section>
+
+    <!-- Enforcement -->
+    <section class="view" id="view-enforcement" aria-labelledby="h-enforcement" hidden>
+      <div class="view-head">
+        <h1 id="h-enforcement">Enforcement</h1>
+        <p class="sub">Check a plate by hand, or run a camera pass over a lot.</p>
+      </div>
+      <div class="enf-grid">
+        <div class="enf-main">
+          <form class="check-form" id="check-form" autocomplete="off">
+            <label class="plate-input">
+              <span class="plate-input-label">Plate</span>
+              <input id="check-plate" name="plate" required maxlength="10" placeholder="ABC1234" spellcheck="false">
+            </label>
+            <label class="field">
+              <span>Lot</span>
+              <select id="check-lot" name="lot" class="lot-select"></select>
+            </label>
+            <div class="row">
+              <button class="btn primary" type="submit">Check plate</button>
+              <button class="btn" type="button" id="sweep">Camera pass on this lot</button>
+            </div>
+          </form>
+          <div id="check-result" class="result" aria-live="polite"></div>
+        </div>
+        <aside class="feed" aria-labelledby="h-feed">
+          <h2 id="h-feed">Camera reads</h2>
+          <ol class="reads" id="reads"></ol>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Citations -->
+    <section class="view" id="view-citations" aria-labelledby="h-citations" hidden>
+      <div class="view-head">
+        <h1 id="h-citations">Citations</h1>
+        <p class="sub" id="cit-summary"></p>
+      </div>
+      <form class="filters" id="cit-filters">
+        <fieldset class="seg" aria-label="Status">
+          <label><input type="radio" name="status" value="open" checked><span>Open</span></label>
+          <label><input type="radio" name="status" value="appealed"><span>Appealed</span></label>
+          <label><input type="radio" name="status" value="paid"><span>Paid</span></label>
+          <label><input type="radio" name="status" value="voided"><span>Voided</span></label>
+          <label><input type="radio" name="status" value=""><span>All</span></label>
+        </fieldset>
+        <label class="field compact">
+          <span class="sr">Search by plate</span>
+          <input type="search" name="plate" placeholder="Search plate" spellcheck="false">
+        </label>
+      </form>
+      <div class="table-wrap">
+        <table class="grid" id="cit-table">
+          <thead>
+            <tr><th>Citation</th><th>Plate</th><th>Lot</th><th>Violation</th><th>Issued</th><th class="num">Due</th><th>Status</th><th><span class="sr">Actions</span></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Permits -->
+    <section class="view" id="view-permits" aria-labelledby="h-permits" hidden>
+      <div class="view-head">
+        <h1 id="h-permits">Permits</h1>
+        <p class="sub" id="permit-summary"></p>
+      </div>
+      <form class="permit-form" id="permit-form" autocomplete="off">
+        <label class="field"><span>Plate</span><input name="plate" required maxlength="10" spellcheck="false"></label>
+        <label class="field"><span>Holder</span><input name="holder" required maxlength="60"></label>
+        <label class="field"><span>Type</span>
+          <select name="permitType">
+            <option>Faculty/Staff</option>
+            <option>Commuter Student</option>
+            <option>Resident</option>
+            <option>Contractor</option>
+          </select>
+        </label>
+        <fieldset class="field zones"><legend>Zones</legend><div id="zone-boxes"></div></fieldset>
+        <label class="field"><span>Starts</span><input type="date" name="startsOn" required></label>
+        <label class="field"><span>Ends</span><input type="date" name="endsOn" required></label>
+        <button class="btn primary" type="submit">Issue permit</button>
+      </form>
+      <form class="filters" id="permit-filters">
+        <fieldset class="seg" aria-label="Status">
+          <label><input type="radio" name="status" value="active" checked><span>Active</span></label>
+          <label><input type="radio" name="status" value="revoked"><span>Revoked</span></label>
+          <label><input type="radio" name="status" value=""><span>All</span></label>
+        </fieldset>
+        <label class="field compact">
+          <span class="sr">Search by plate</span>
+          <input type="search" name="plate" placeholder="Search plate" spellcheck="false">
+        </label>
+      </form>
+      <div class="table-wrap">
+        <table class="grid" id="permit-table">
+          <thead>
+            <tr><th>#</th><th>Plate</th><th>Holder</th><th>Type</th><th>Zones</th><th>Valid</th><th>Status</th><th><span class="sr">Actions</span></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="dialog">
+    <form method="dialog" id="dialog-form">
+      <h2 id="dialog-title"></h2>
+      <p id="dialog-text"></p>
+      <label class="field" id="dialog-note-wrap"><span>Note</span><textarea id="dialog-note" rows="3" maxlength="300"></textarea></label>
+      <div class="row end">
+        <button class="btn" value="cancel" formnovalidate>Cancel</button>
+        <button class="btn primary" value="ok" id="dialog-ok"></button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <footer class="foot">
+    <p>Curbline is a portfolio project by Mitchell Sampson. Lots, plates and people are made up.
+      <a href="https://github.com/mjsampsonmusic/curbline">Source on GitHub</a></p>
+  </footer>
+
+  <script type="module" src="app.js?v=1"></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "curbline",
+  "version": "1.0.0",
+  "description": "Parking operations console: permits, plate checks, citations and lot occupancy, on one shared SQL service layer.",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "author": "Mitchell Sampson",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "test": "node --test \"test/*.test.js\"",
+    "build:pages": "node scripts/build-pages.js"
+  },
+  "dependencies": {
+    "express": "^4.22.3",
+    "sql.js": "^1.14.2"
+  }
+}
